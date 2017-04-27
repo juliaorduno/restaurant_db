@@ -1,4 +1,4 @@
-package vistas;
+
 
 import java.beans.*;
 import java.awt.event.*;

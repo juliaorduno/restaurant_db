@@ -1,131 +1,33 @@
-package vistas;
-
 import java.awt.*;
 import javax.swing.*;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.WindowEvent;
 
-public class ViewAlmacenistas extends JPanel implements MouseListener{
+public class ViewAlmacenistas extends MainView{
 	
-	private JLabel title;
-	private Table table;
-	private String[][] data;
-	private Database db;
-	private JButton insertar, delete;
-	private int currentAlmacen;
+	private static final long serialVersionUID = 1L;
 	private int claveGerente;
+	protected static final int num = 2;
 
 	public ViewAlmacenistas(int claveGerente){
-		super();
-		setBackground(new Color(255, 255, 255));
-		setLayout(null);
-		this.setPreferredSize(new Dimension(840,614));
-		
-		this.db = new Database();
+		super("Almacenistas");
 		this.claveGerente = claveGerente;
-		this.title = new JLabel("Almacenistas");
-		this.title.setFont(new Font("Microsoft JhengHei UI Light", Font.BOLD, 20));
-		this.title.setBounds(47, 47, 239, 49);
-		add(this.title);
-		
-		this.insertar = new JButton("Nuevo Almacenista");
-		this.insertar.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent arg0) {
-				InsertarAlmacenista nuevoAlmacenista = new InsertarAlmacenista();
-			}
-		});
-		this.insertar.setForeground(new Color(255, 255, 255));
-		this.insertar.setBackground(new Color(102, 102, 102));
-		this.insertar.setBorderPainted(false);
-		this.insertar.setFocusPainted(false);
-		this.insertar.setBounds(659, 64, 124, 32);
-		add(this.insertar);
-		
-		delete = new JButton("Borrar");
-		this.delete.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent arg0) {
-				db.delete_almacenista("'" + table.table.getValueAt(table.table.getSelectedRow(), 0).toString() + "'");
-				table.removeRow(table.table.getSelectedRow());
-			}
-		});
-		delete.setEnabled(false);
-		delete.setForeground(Color.WHITE);
-		delete.setBackground(new Color(102, 102, 102));
-		this.delete.setBorderPainted(false);
-		this.delete.setFocusPainted(false);
-		delete.setBounds(659, 107, 124, 32);
-		add(delete);
-		
-		this.addTable();
-		this.addMouseListener(this);
-		this.getTableChanges();
+		String[] columnNames = {"Nombre","Teléfono", "Dirección" ,"Gerente"};
+		this.setData();
+		this.columnNames = columnNames;
+		this.addTable(num);
 	}
 	
 	public void setData(){
 		this.data = db.getViewGerenteAlmacenista();
 	}
 	
-	public void addTable(){
-		String[] columnNames = {"Nombre","Teléfono", "Dirección" ,"Gerente"};
-		this.setData();
-		this.table = new Table(columnNames, this.data);
-		this.table.table.addMouseListener(new MouseAdapter(){
-			public void mouseReleased(MouseEvent e)
-			{
-				delete.setEnabled(true);
-			}
-		});
-		this.table.setBounds(54, 179, 730, 404);
-		this.add(this.table);
-	}
-	
-	public void updateTable(){
-		this.remove(this.table);
-		this.addTable();
-		this.revalidate();
-		this.repaint();
-	}
-	
-	public void getTableChanges(){
-		Action action = new AbstractAction()
-		{
-
-			private static final long serialVersionUID = 1L;
-
-			public void actionPerformed(ActionEvent e)
-		    {
-				
-		        TableCellListener tcl = (TableCellListener)e.getSource();
-		        table.row = tcl.getRow();
-		        table.column = tcl.getColumn();
-		        table.oldValue = tcl.getOldValue().toString();
-		        table.newValue = tcl.getNewValue().toString();
-		        String nombre = (String) table.table.getValueAt(table.row, 0);
-		        String nuevo = table.newValue;
-		        switch(table.column){
-				case 1:
-					db.update_almacenista("telefono", nombre, nuevo);
-					updateTable();
-					break;
-				case 2: 
-					db.update_almacenista("direccion",nombre, nuevo);
-					updateTable();
-					break;
-				}
-		        
-		    }
-		};
-
-		TableCellListener tcl = new TableCellListener(table.table, action);
-		
-	}
-	
 	private class InsertarAlmacenista extends VentanaAuxiliar{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		private String nombre, telefono, direccion, clave;
 		private JTextField tf_clave, tf_nombre, tf_telefono, tf_direccion;
 		private JLabel l_clave, l_direccion, l_nombre, l_empresa;
@@ -189,7 +91,7 @@ public class ViewAlmacenistas extends JPanel implements MouseListener{
 					if(!clave.equals("") && !nombre.equals("")){
 						db.insertarAlmacenista(Integer.parseInt(clave), nombre, telefono, direccion, claveGerente);
 						closeWindow();
-						updateTable();
+						updateTable(num);
 					} else if(clave.equals("") && nombre.equals("") && telefono.equals("") && direccion.equals(""))
 						closeWindow();
 					else if(clave.equals("") || nombre.equals(""))
@@ -202,17 +104,37 @@ public class ViewAlmacenistas extends JPanel implements MouseListener{
 		
 	}
 
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		if(e.getSource() != this.table)
-			delete.setEnabled(false);
+	public void actionPerformed(ActionEvent e) {
+		TableCellListener tcl = (TableCellListener)e.getSource();
+        table.row = tcl.getRow();
+        table.column = tcl.getColumn();
+        table.oldValue = tcl.getOldValue().toString();
+        table.newValue = tcl.getNewValue().toString();
+        String nombre = (String) table.table.getValueAt(table.row, 0);
+        String nuevo = table.newValue;
+        switch(table.column){
+		case 1:
+			db.update_almacenista("telefono", nombre, nuevo);
+			break;
+		case 2: 
+			db.update_almacenista("direccion",nombre, nuevo);
+			break;
+		}
+        setData();
 	}
-	public void mouseEntered(MouseEvent e) {
-	}
-	public void mouseExited(MouseEvent e) {
-	}
-	public void mousePressed(MouseEvent e) {
-	}
-	public void mouseReleased(MouseEvent e) {
+	
+	public void mouseClicked(MouseEvent e){
+		if(e.getSource() != this.table){
+			this.remove(delete);
+			this.add(delete_disabled);
+			this.revalidate();
+			this.repaint();
+		}
+		if(e.getSource() == this.delete){
+			db.delete_almacenista("'" + table.table.getValueAt(table.table.getSelectedRow(), 0).toString() + "'");
+			table.removeRow(table.table.getSelectedRow());
+		} else if(e.getSource() == this.insertar){
+			InsertarAlmacenista nuevoAlmacenista = new InsertarAlmacenista();
+		}
 	}
 }

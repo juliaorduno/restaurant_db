@@ -1,36 +1,25 @@
-package vistas;
+
 
 import java.awt.*;
 import javax.swing.*;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 
-public class ViewAlmacenes extends JPanel implements MouseListener{
-	private JComboBox menu;
-	private JLabel title,nombre, empresa, direccion, edit;
-	private Table table;
+public class ViewAlmacenes extends MainView{
+
+	private static final long serialVersionUID = 1L;
+	private JComboBox<String> menu;
+	private JLabel nombre, empresa, direccion, edit;
 	private String[] menu_items, info;
-	private String[][] data;
-	private Database db;
-	private JButton deleteInsumo, insertar, nuevoInsumo;
 	private int currentAlmacen;
+	private Almacen nuevo;
+	protected static final int num = 1;
 
 	public ViewAlmacenes(){
-		super();
-		setBackground(new Color(255, 255, 255));
-		setLayout(null);
-		this.setPreferredSize(new Dimension(840,614));
-		this.db = new Database();
-		
-		this.title = new JLabel("Almacenes");
-		this.title.setFont(new Font("Microsoft JhengHei UI Light", Font.BOLD, 20));
-		this.title.setBounds(47, 47, 239, 49);
-		add(this.title);
+		super("Almacenes");
 
 		this.setMenuItems();
 		
@@ -49,167 +38,91 @@ public class ViewAlmacenes extends JPanel implements MouseListener{
 		this.direccion.setBounds(54, 201, 729, 19);
 		this.add(this.direccion);
 		
-		this.insertar = new JButton("Nuevo Almacén");
-		this.insertar.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent arg0) {
-				Almacen nuevoAlmacen = new Almacen("insertar");
-			}
-		});
-		this.insertar.setForeground(new Color(255, 255, 255));
-		this.insertar.setBackground(new Color(102, 102, 102));
-		this.insertar.setBorderPainted(false);
-		this.insertar.setFocusPainted(false);
-		this.insertar.setBounds(659, 64, 124, 32);
-		add(this.insertar);
-		
-		deleteInsumo = new JButton("Borrar");
-		this.deleteInsumo.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent arg0) {
-				db.delete_insumo(currentAlmacen, table.table.getValueAt(table.table.getSelectedRow(), 0).toString());
-				table.removeRow(table.table.getSelectedRow());
-			}
-		});
-		deleteInsumo.setEnabled(false);
-		deleteInsumo.setForeground(Color.WHITE);
-		deleteInsumo.setBackground(new Color(102, 102, 102));
-		this.deleteInsumo.setBorderPainted(false);
-		this.deleteInsumo.setFocusPainted(false);
-		deleteInsumo.setBounds(659, 107, 124, 32);
-		add(deleteInsumo);
-		
-		this.addMouseListener(this);
-		
-		this.edit = new JLabel(new ImageIcon(ViewAlmacenes.class.getResource("/vistas/img/pencil.png")));
+		this.edit = new JLabel(new ImageIcon(ViewAlmacenes.class.getResource("/img/pencil.png")));
 		this.edit.addMouseListener(this);
-		this.edit.setForeground(Color.WHITE);
-		this.edit.setBackground(Color.WHITE);
 		this.edit.setBounds(724, 180, 38, 39);
 		this.add(this.edit);
 		
-		nuevoInsumo = new JButton("Nuevo Insumo");
-		this.nuevoInsumo.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent arg0) {
-				Insumo insumo = new Insumo();
-			}
-		});
-		nuevoInsumo.setForeground(Color.WHITE);
-		nuevoInsumo.setFocusPainted(false);
-		nuevoInsumo.setBorderPainted(false);
-		nuevoInsumo.setBackground(new Color(102, 102, 102));
-		nuevoInsumo.setBounds(521, 64, 124, 32);
-		add(nuevoInsumo);
-		
-		this.setInfo(1);
-		this.getTableChanges();
+		this.currentAlmacen = 1;
+		String[] columnNames ={"Producto","Cantidad Necesaria", "Cantidad Actual" ,"Estado"};
+		this.columnNames = columnNames;
+		this.setInfo();
 	}
 	
 	public void setMenuItems(){
-		String[] items = db.getViewGerenteAlmacenItems();
-		this.menu_items = items;
-		this.menu = new JComboBox(this.menu_items);
+		
+		this.menu_items = db.getViewGerenteAlmacenItems();
+		this.menu = new JComboBox<String>(this.menu_items);
+		this.menu.addItem("Agregar nuevo");
 		this.menu.setBackground(new Color(255, 255, 255));
 		this.menu.setFont(new Font("Microsoft JhengHei UI", Font.PLAIN, 12));
 		this.menu.setBounds(47, 107, 220, 20);
 		this.menu.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				String selected = String.valueOf(menu.getSelectedItem());
-				int almacen = db.getNumAlmacen(selected);
-				remove(table);
-				setInfo(almacen);
-				revalidate();
-				repaint();
+				if(selected.equals("Agregar nuevo"))
+					nuevo = new Almacen("insertar");
+				else{
+					currentAlmacen = db.getNumAlmacen(selected);
+					remove(table);
+					setInfo();
+					revalidate();
+					repaint();
+				}
 			}
 		});
 		add(this.menu);
-		
 	}
 	
-	public void setData(int selectedItem){
-		this.data = db.getViewGerenteAlmacenInsumos(selectedItem);
+	public void setData(){
+		this.data = db.getViewGerenteAlmacenInsumos(this.currentAlmacen);
 	}
 	
-	public void addTable(int selected){
-		String[] columnNames = {"Producto","Cantidad Necesaria", "Cantidad Actual" ,"Estado"};
-		this.setData(selected);
-		this.table = new Table(columnNames, this.data);
-		this.table.table.addMouseListener(new MouseAdapter(){
-			public void mouseReleased(MouseEvent e)
-			{
-				deleteInsumo.setEnabled(true);
-			}
-		});
-		this.table.setBounds(54, 245, 730, 338);
-		this.add(this.table);
-	}
-	
-	public void setInfo(int nAlmacen){
-		this.currentAlmacen = nAlmacen;
-		this.info = db.getViewGerenteAlmacenInfo(nAlmacen);
+	public void setInfo(){
+		this.info = db.getViewGerenteAlmacenInfo(this.currentAlmacen);
 		this.nombre.setText("Nombre: " + this.info[1]);
 		this.direccion.setText("Dirección: " + info[3]);
 		this.empresa.setText("Empresa: " + info[2]);
 		this.add(this.nombre);
 		this.add(this.direccion);
 		this.add(this.empresa);
-		this.addTable(nAlmacen);
+		this.setData();
+		this.addTable(num);
 	}
 	
 	public void updateHeader(){
 		this.remove(this.menu);
 		this.setMenuItems();
-		this.setInfo(this.currentAlmacen);
+		this.setInfo();
 		this.revalidate();
 		this.repaint();
 	}
 	
-	public void updateTable(){
-		this.remove(this.table);
-		this.addTable(this.currentAlmacen);
-		this.revalidate();
-		this.repaint();
-	}
-	
-	public void getTableChanges(){
-		Action action = new AbstractAction()
-		{
-		    /**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			public void actionPerformed(ActionEvent e)
-		    {
-				
-		        TableCellListener tcl = (TableCellListener)e.getSource();
-		        table.row = tcl.getRow();
-		        table.column = tcl.getColumn();
-		        table.oldValue = tcl.getOldValue().toString();
-		        table.newValue = tcl.getNewValue().toString();
-		        String producto = (String) table.table.getValueAt(table.row, 0);
-		        int nuevaCantidad;
-		        switch(table.column){
-				case 0:
-					db.update_producto_nombre(table.oldValue, table.newValue);
-					break;
-				case 1:
-					nuevaCantidad = Integer.parseInt(table.newValue);
-					db.update_cantidad("necesaria", currentAlmacen, producto , nuevaCantidad);
-					updateTable();
-					break;
-				case 2: 
-					nuevaCantidad = Integer.parseInt(table.newValue);
-					db.update_cantidad("actual",currentAlmacen, producto , nuevaCantidad);
-					updateTable();
-					break;
-				}
-		    }
-		};
-
-		TableCellListener tcl = new TableCellListener(table.table, action);
-		
+	public void actionPerformed(ActionEvent e){
+		TableCellListener tcl = (TableCellListener)e.getSource();
+        table.row = tcl.getRow();
+        table.column = tcl.getColumn();
+        table.oldValue = tcl.getOldValue().toString();
+        table.newValue = tcl.getNewValue().toString();
+        String producto = (String) table.table.getValueAt(table.row, 0);
+        int nuevaCantidad;
+        switch(table.column){
+		case 1:
+			nuevaCantidad = Integer.parseInt(table.newValue);
+			db.update_cantidad("necesaria", currentAlmacen, producto , nuevaCantidad);
+			break;
+		case 2: 
+			nuevaCantidad = Integer.parseInt(table.newValue);
+			db.update_cantidad("actual",currentAlmacen, producto , nuevaCantidad);
+			break;
+		}
+        setData();
+        updateTable(num);
 	}
 	
 	private class Almacen extends VentanaAuxiliar{
+
+		private static final long serialVersionUID = 1L;
 		private String nombre, empresa, direccion,numero;
 		private JTextField tf_numero, tf_nombre, tf_empresa, tf_direccion;
 		private JLabel l_numero, l_direccion, l_nombre, l_empresa;
@@ -233,11 +146,11 @@ public class ViewAlmacenes extends JPanel implements MouseListener{
 				this.tf_empresa = new JTextField(info[2]);
 				this.tf_direccion = new JTextField(info[3]);
 				this.header = new JTextArea("Actualizar datos del almacén. \nCampos señalados con * son obligatorios.");
-				this.setTitle("Editar almacén " + info[0]);
+				this.setTitle("Editar almacén " + info[1]);
 			}
 			this.setBounds(100, 100, 382, 343);
 			
-			this.l_numero = new JLabel("*Número: ");
+			this.l_numero = this.action.equals("insertar")?new JLabel("*Número: "):new JLabel("Número:");
 			this.l_numero.setFont(new Font("Microsoft JhengHei UI", Font.PLAIN, 12));
 			this.l_numero.setBounds(32, 82, 70, 26);
 			this.getContentPane().add(this.l_numero);
@@ -312,12 +225,13 @@ public class ViewAlmacenes extends JPanel implements MouseListener{
 
 	private class Insumo extends VentanaAuxiliar{
 
+		private static final long serialVersionUID = 1L;
 		private String producto,cantActual;
 		private int cantNec;
 		private JTextField tf_cantNec, tf_cantActual;
 		private JLabel l_cantActual, l_producto, l_cantNec;
 		private JTextArea header;
-		private JComboBox menu_productos;
+		private JComboBox<String> menu_productos;
 		
 		public Insumo(){
 			super("Nuevo Insumo");
@@ -353,18 +267,6 @@ public class ViewAlmacenes extends JPanel implements MouseListener{
 			this.tf_cantActual.setBounds(163, 160, 182, 20);
 			this.getContentPane().add(this.tf_cantActual);
 			
-			this.cancelar = new JButton("Cancelar");
-			cancelar.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					closeWindow();
-				}
-			});
-			this.cancelar.setBounds(256, 244, 89, 23);
-			this.getContentPane().add(this.cancelar);
-			this.cancelar.setBackground(new Color(0, 51, 204));
-			this.cancelar.setBorderPainted(false);
-			this.cancelar.setFocusPainted(false);
-			this.cancelar.setForeground(Color.WHITE);
 			this.producto = "";
 
 			this.aceptar.addActionListener(new ActionListener(){
@@ -375,7 +277,7 @@ public class ViewAlmacenes extends JPanel implements MouseListener{
 					if(!cantActual.equals("") && !producto.equals("")){
 						cantNec = temp.equals("")?0:Integer.parseInt(temp);
 						db.insertarInsumo(currentAlmacen, producto, cantNec, Integer.parseInt(cantActual));
-						updateTable();
+						updateTable(num);
 						closeWindow();
 					} else if(producto.equals("") && tf_cantNec.getText().equals("") && cantActual.equals(""))
 						closeWindow();
@@ -385,7 +287,7 @@ public class ViewAlmacenes extends JPanel implements MouseListener{
 				}
 			});
 			
-			menu_productos = new JComboBox(db.getViewGerenteInsumoItems(currentAlmacen));
+			menu_productos = new JComboBox<String>(db.getViewGerenteInsumoItems(currentAlmacen));
 			menu_productos.setFont(new Font("Microsoft JhengHei UI", Font.PLAIN, 12));
 			menu_productos.setBackground(Color.WHITE);
 			menu_productos.setBounds(107, 123, 238, 20);
@@ -393,21 +295,23 @@ public class ViewAlmacenes extends JPanel implements MouseListener{
 			getContentPane().add(menu_productos);
 		}
 	}
-	@Override
+	
 	public void mouseClicked(MouseEvent e) {
-		if(e.getSource() != this.table)
-			deleteInsumo.setEnabled(false);
+		if(e.getSource() != this.table){
+			this.remove(delete);
+			this.add(delete_disabled);
+			this.revalidate();
+			this.repaint();
+		}
 		if(e.getSource() == this.edit){
 			Almacen update = new Almacen("update");
+		} else if(e.getSource() == this.insertar){
+			Insumo insumo = new Insumo();
+		}
+		else if(e.getSource() == this.delete){
+			db.delete_insumo(currentAlmacen, table.table.getValueAt(table.table.getSelectedRow(), 0).toString());
+			table.removeRow(table.table.getSelectedRow());
 		}
 	}
-	public void mouseEntered(MouseEvent e) {
 
-	}
-	public void mouseExited(MouseEvent e) {
-	}
-	public void mousePressed(MouseEvent e) {
-	}
-	public void mouseReleased(MouseEvent e) {
-	}
 }

@@ -1,19 +1,19 @@
-package vistas;
+
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+@SuppressWarnings("serial")
 public class Gerente extends JFrame {
 
-	private JPanel sidebar, almacenes, almacenistas, navbar, current;
+	private JPanel sidebar, almacenes, almacenistas, navbar, current, insumos, proveedores;
 	private JButton b_almacenes, b_almacenistas, b_insumos, b_proveedores, b_logout;
 	private JLabel user, name;
 	private String[] gerenteInfo;
 	private Database db;
-	private JLabel label;
-	private JScrollPane scrollPane;
 	private Integer clave;
+	private int currentNum;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -45,10 +45,15 @@ public class Gerente extends JFrame {
 		this.clave = Integer.parseInt(this.gerenteInfo[0]);
 		this.almacenes = new ViewAlmacenes();
 		this.almacenistas = new ViewAlmacenistas(this.clave);
+		this.insumos = new ViewInsumos(this.clave);
+		this.proveedores = new ViewProveedores();
 		this.current = this.almacenes;
+		this.currentNum = 1;
+		this.current.setBounds(145, 50, 855, 650);
+		this.getContentPane().add(this.current);
 		this.navbar = new JPanel();
 		this.navbar.setBackground(new Color(0, 51, 204));
-		this.navbar.setBounds(0, 0, 985, 50);
+		this.navbar.setBounds(0, 0, 1000, 50);
 		this.getContentPane().add(this.navbar);
 		this.navbar.setLayout(null);
 		
@@ -57,7 +62,7 @@ public class Gerente extends JFrame {
 		
 		this.sidebar = new JPanel();
 		this.sidebar.setBackground(new Color(0, 0, 153));
-		this.sidebar.setBounds(0, 50, 145, 611);
+		this.sidebar.setBounds(0, 50, 145, 650);
 		this.getContentPane().add(this.sidebar);
 		this.sidebar.setLayout(null);
 		
@@ -90,21 +95,37 @@ public class Gerente extends JFrame {
 					JPanel newPanel;
 					if(i == b_almacenes){
 						newPanel = almacenes;
+						((ViewAlmacenes) almacenes).setData();
+						currentNum = 1;
 					}
 					else if(i == b_almacenistas){
 						newPanel = almacenistas;
+						((ViewAlmacenistas) almacenistas).setData();
+						currentNum = 2;
+					}
+					else if(i == b_insumos){
+						newPanel = insumos;
+						((ViewInsumos) insumos).setData();
+						currentNum = 3;
+					}
+					else if(i == b_proveedores){
+						newPanel = proveedores;
+						((ViewProveedores) proveedores).setData();
+						currentNum = 4;
 					}
 					else{
 						newPanel = current;
 					}
 					
 					if(newPanel != current){
-						scrollPane.remove(current);
-						addScroll(newPanel);
+						
+						getContentPane().remove(current);
+						current = newPanel;
+						current.setBounds(145, 50, 855, 650);
+						((MainView) current).updateTable(currentNum);
+						getContentPane().add(current);
 						getContentPane().revalidate();
 						getContentPane().repaint();
-			            current = newPanel;
-
 					}	
 				}
 				public void mouseEntered(MouseEvent e) {
@@ -135,17 +156,9 @@ public class Gerente extends JFrame {
 		user.setBounds(25, 11, 55, 27);
 		navbar.add(user);
 		this.user.setForeground(Color.WHITE);
-		this.scrollPane = new JScrollPane();
-		this.scrollPane.setBounds(144, 47, 840, 620);
-		this.addScroll(this.current);
-		this.getContentPane().add(scrollPane);
+		
 		this.setVisible(true);
 		
 	}
 	
-	public void addScroll(JPanel panel){
-		scrollPane.setViewportView(panel);
-		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-	}
 }

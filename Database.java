@@ -1,4 +1,3 @@
-package vistas;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -57,6 +56,22 @@ public class Database {
 		return result;	
 	}
 	
+	private String[] getQuery(String sql){
+		List<String> rslt = new ArrayList<String>();
+		ResultSet rs;
+		try {
+			rs = this.st.executeQuery(sql);
+			while(rs.next())
+				rslt.add(rs.getString(1));
+			
+		} catch (SQLException e) {
+			System.out.println("Excepción " + e.getClass().getName());
+		}
+		String[] result = new String[rslt.size()];
+		rslt.toArray(result);
+		return result;
+	}
+	
 	//Insert o update directamente
 	private void updateValues(String sql){
 		try {
@@ -105,6 +120,16 @@ public class Database {
 		return getQuery(sql,4);
 	}
 	
+	public String[][] getViewGerenteInsumos(){
+		String sql = "select * from gerente_insumos";
+		return getQuery(sql,4);
+	}
+	
+	public String[][] getViewGerenteProveedores(){
+		String sql = "select * from gerente_proveedores";
+		return getQuery(sql,3);
+	}
+	
 	public String[] getViewGerenteAlmacenInfo(Object nAlmacen){
 		String sql = "select * from almacen where nalmacen=" + nAlmacen;
 		return getQuery(sql,4)[0];
@@ -112,19 +137,12 @@ public class Database {
 	
 	public String[] getViewGerenteAlmacenItems(){
 		String sql = "select nombre from almacen";
-		List<String> rslt = new ArrayList<String>();
-		ResultSet rs;
-		try {
-			rs = this.st.executeQuery(sql);
-			while(rs.next())
-				rslt.add(rs.getString(1));
-			
-		} catch (SQLException e) {
-			System.out.println("Excepción " + e.getClass().getName());
-		}
-		String[] result = new String[rslt.size()];
-		rslt.toArray(result);
-		return result;
+		return getQuery(sql);
+	}
+	
+	public String[] getViewGerenteInsumoItems(){
+		String sql = "select nombre from proveedor";
+		return getQuery(sql);
 	}
 
 	public String[] getGerenteInfo(){
@@ -148,19 +166,7 @@ public class Database {
 	
 	public String[] getViewGerenteInsumoItems(int almacen){
 		String sql = "select p.nombre from producto p where not exists(select * from insumo where p.clave = insumo.clave and nalmacen =" + almacen + ")";
-		List<String> rslt = new ArrayList<String>();
-		ResultSet rs;
-		try {
-			rs = this.st.executeQuery(sql);
-			while(rs.next())
-				rslt.add(rs.getString(1));
-			
-		} catch (SQLException e) {
-			System.out.println("Excepción " + e.getClass().getName());
-		}
-		String[] result = new String[rslt.size()];
-		rslt.toArray(result);
-		return result;
+		return getQuery(sql);
 	}
 	
 	//No me sale todavía xdxd
@@ -222,6 +228,50 @@ public class Database {
 			cs.setString(4, telefono);
 			cs.setString(5, direccion);
 			cs.setInt(6, claveGerente);
+			this.callFunction(cs);
+		} catch (SQLException e) {
+			System.out.println("Excepción " + e.getClass().getName());
+		}
+	}
+	
+	public void insertarProducto(int clave, String nombre, String tipo, String proveedor, int claveGerente){
+		CallableStatement cs;
+		try {
+			cs = con.prepareCall("begin ? := insert_producto(?,?,?,?,?); end;");
+			cs.registerOutParameter(1, Types.VARCHAR);
+			cs.registerOutParameter(2, Types.INTEGER);
+			cs.registerOutParameter(3, Types.VARCHAR);
+			cs.registerOutParameter(4, Types.VARCHAR);
+			cs.registerOutParameter(5, Types.VARCHAR);
+			cs.registerOutParameter(6, Types.INTEGER);
+			
+			cs.setString(1, "");
+			cs.setInt(2, clave);
+			cs.setString(3, nombre);
+			cs.setString(4, tipo);
+			cs.setString(5, proveedor);
+			cs.setInt(6, claveGerente);
+			this.callFunction(cs);
+		} catch (SQLException e) {
+			System.out.println("Excepción " + e.getClass().getName());
+		}
+	}
+	
+	public void insertarProveedor(int clave, String nombre, String telefono, String email){
+		CallableStatement cs;
+		try {
+			cs = con.prepareCall("begin ? := insert_producto(?,?,?,?); end;");
+			cs.registerOutParameter(1, Types.VARCHAR);
+			cs.registerOutParameter(2, Types.INTEGER);
+			cs.registerOutParameter(3, Types.VARCHAR);
+			cs.registerOutParameter(4, Types.VARCHAR);
+			cs.registerOutParameter(5, Types.VARCHAR);
+			
+			cs.setString(1, "");
+			cs.setInt(2, clave);
+			cs.setString(3, nombre);
+			cs.setString(4, telefono);
+			cs.setString(5, email);
 			this.callFunction(cs);
 		} catch (SQLException e) {
 			System.out.println("Excepción " + e.getClass().getName());
@@ -300,6 +350,22 @@ public class Database {
 		}
 	}
 	
+	public void update_proveedor(String funcion, String nombre, String nuevo){
+		CallableStatement cs;
+		try{
+			cs = con.prepareCall("begin ? := update_proveedor_"+funcion+"(?,?); end;");
+			cs.registerOutParameter(1, Types.VARCHAR);
+			cs.registerOutParameter(2, Types.VARCHAR);
+			cs.registerOutParameter(3, Types.VARCHAR);
+			cs.setString(1,"");
+			cs.setString(2,nombre);
+			cs.setString(3,nuevo);
+			this.callFunction(cs);
+		} catch (SQLException e) {
+			System.out.println("Excepción " + e.getClass().getName());
+		}
+	}
+	
 	public void update_almacen(int nalmacen, String atributo, String nuevo){
 		String sql = "update almacen set " + atributo + "='" + nuevo + "' where nalmacen=" + nalmacen;
 		this.updateValues(sql);
@@ -345,8 +411,25 @@ public class Database {
 		this.updateValues(sql);
 	}
 	
+	public void delete_producto(String nombre){
+		String sql = "delete from producto where nombre=" + nombre;
+		this.updateValues(sql);
+	}
+	
+	public void delete_proveedor(String nombre){
+		String sql = "delete from proveedor where nombre=" + nombre;
+		this.updateValues(sql);
+	}
+	
 	
 	public static void main(String[] args){
 		Database db = new Database();
+		String[][] t = db.getViewGerenteProveedores();
+		for (int i = 0; i < t.length; i++) {
+			for (int j = 0; j < t[i].length; j++) {
+				System.out.println(t[i][j]);
+			}
+			
+		}
 	}
 }
