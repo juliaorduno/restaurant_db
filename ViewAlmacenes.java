@@ -16,7 +16,7 @@ public class ViewAlmacenes extends MainView{
 	private String[] menu_items, info;
 	private int currentAlmacen;
 	private Almacen nuevo;
-	protected static final int num = 1;
+	protected final int num = 1;
 
 	public ViewAlmacenes(){
 		super("Almacenes");
@@ -44,7 +44,7 @@ public class ViewAlmacenes extends MainView{
 		this.add(this.edit);
 		
 		this.currentAlmacen = 1;
-		String[] columnNames ={"Producto","Cantidad Necesaria", "Cantidad Actual" ,"Estado"};
+		String[] columnNames ={"Producto","Par Stock", "Existencia" ,"Estado"};
 		this.columnNames = columnNames;
 		this.setInfo();
 	}
@@ -120,6 +120,10 @@ public class ViewAlmacenes extends MainView{
         updateTable(num);
 	}
 	
+	public void removeTable(){
+		  this.remove(this.table);
+	}
+	
 	private class Almacen extends VentanaAuxiliar{
 
 		private static final long serialVersionUID = 1L;
@@ -147,6 +151,7 @@ public class ViewAlmacenes extends MainView{
 				this.tf_direccion = new JTextField(info[3]);
 				this.header = new JTextArea("Actualizar datos del almacén. \nCampos señalados con * son obligatorios.");
 				this.setTitle("Editar almacén " + info[1]);
+				this.add(this.borrar);
 			}
 			this.setBounds(100, 100, 382, 343);
 			
@@ -209,6 +214,8 @@ public class ViewAlmacenes extends MainView{
 							db.update_almacen(Integer.parseInt(info[0]),"empresa",empresa);
 							db.update_almacen(Integer.parseInt(info[0]),"direccion",direccion);
 						}
+						currentAlmacen = Integer.parseInt(numero);
+						removeTable();
 						updateHeader();
 						closeWindow();
 						
@@ -219,6 +226,19 @@ public class ViewAlmacenes extends MainView{
 					
 				}
 			});
+			
+			this.borrar.addActionListener(new ActionListener(){
+
+			    public void actionPerformed(ActionEvent e) {
+			     numero = tf_numero.getText();
+			     db.delete_almacen(Integer.parseInt(numero));
+			     currentAlmacen = 1;
+			     removeTable();
+			     updateHeader();
+			     closeWindow();
+			    }
+			    
+			   });
 		}
 		
 	}
@@ -226,8 +246,8 @@ public class ViewAlmacenes extends MainView{
 	private class Insumo extends VentanaAuxiliar{
 
 		private static final long serialVersionUID = 1L;
-		private String producto,cantActual;
-		private int cantNec;
+		private String producto,cantNec;
+		private int cantActual;
 		private JTextField tf_cantNec, tf_cantActual;
 		private JLabel l_cantActual, l_producto, l_cantNec;
 		private JTextArea header;
@@ -242,7 +262,7 @@ public class ViewAlmacenes extends MainView{
 			this.l_producto.setBounds(32, 119, 70, 26);
 			this.getContentPane().add(this.l_producto);
 			
-			this.l_cantNec = new JLabel("Cantidad Necesaria: ");
+			this.l_cantNec = new JLabel("*Par Stock: ");
 			this.l_cantNec.setFont(new Font("Microsoft JhengHei UI", Font.PLAIN, 12));
 			this.l_cantNec.setBounds(32, 193, 121, 26);
 			this.getContentPane().add(this.l_cantNec);
@@ -252,7 +272,7 @@ public class ViewAlmacenes extends MainView{
 			this.header.setBounds(22, 24, 323, 37);
 			this.getContentPane().add(this.header);
 			
-			this.l_cantActual = new JLabel("*Cantidad Actual: ");
+			this.l_cantActual = new JLabel("Existencia: ");
 			this.l_cantActual.setFont(new Font("Microsoft JhengHei UI", Font.PLAIN, 12));
 			this.l_cantActual.setBounds(32, 156, 121, 26);
 			this.getContentPane().add(this.l_cantActual);
@@ -271,17 +291,18 @@ public class ViewAlmacenes extends MainView{
 
 			this.aceptar.addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent arg0) {
-					String temp = tf_cantNec.getText();
+					String temp = tf_cantActual.getText();
 					producto = String.valueOf(menu_productos.getSelectedItem());
-					cantActual = tf_cantActual.getText();
-					if(!cantActual.equals("") && !producto.equals("")){
-						cantNec = temp.equals("")?0:Integer.parseInt(temp);
-						db.insertarInsumo(currentAlmacen, producto, cantNec, Integer.parseInt(cantActual));
+					cantNec = tf_cantNec.getText();
+					if(!cantNec.equals("") && !producto.equals("")){
+						cantActual = temp.equals("")?0:Integer.parseInt(temp);
+						db.insertarInsumo(currentAlmacen, producto, Integer.parseInt(cantNec),cantActual);
+						setData();
 						updateTable(num);
 						closeWindow();
-					} else if(producto.equals("") && tf_cantNec.getText().equals("") && cantActual.equals(""))
+					} else if(producto.equals("") && tf_cantActual.getText().equals("") && cantNec.equals(""))
 						closeWindow();
-					else if(cantActual.equals("") || producto.equals(""))
+					else if(cantNec.equals("") || producto.equals(""))
 						JOptionPane.showMessageDialog(null, "Llenar campos obligatorios");
 					
 				}
@@ -296,7 +317,7 @@ public class ViewAlmacenes extends MainView{
 		}
 	}
 	
-	public void mouseClicked(MouseEvent e) {
+	public void mouseReleased(MouseEvent e) {
 		if(e.getSource() != this.table){
 			this.remove(delete);
 			this.add(delete_disabled);

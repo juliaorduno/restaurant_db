@@ -8,7 +8,7 @@ public class ViewAlmacenistas extends MainView{
 	
 	private static final long serialVersionUID = 1L;
 	private int claveGerente;
-	protected static final int num = 2;
+	protected final int num = 2;
 
 	public ViewAlmacenistas(int claveGerente){
 		super("Almacenistas");
@@ -91,6 +91,7 @@ public class ViewAlmacenistas extends MainView{
 					if(!clave.equals("") && !nombre.equals("")){
 						db.insertarAlmacenista(Integer.parseInt(clave), nombre, telefono, direccion, claveGerente);
 						closeWindow();
+						setData();
 						updateTable(num);
 					} else if(clave.equals("") && nombre.equals("") && telefono.equals("") && direccion.equals(""))
 						closeWindow();
@@ -111,8 +112,13 @@ public class ViewAlmacenistas extends MainView{
         table.oldValue = tcl.getOldValue().toString();
         table.newValue = tcl.getNewValue().toString();
         String nombre = (String) table.table.getValueAt(table.row, 0);
+        String telefono = (String) table.table.getValueAt(table.row, 1);
         String nuevo = table.newValue;
+        int clave;
         switch(table.column){
+        case 0:
+        	db.update_almacenista("nombre", nuevo, table.oldValue);
+        	break;
 		case 1:
 			db.update_almacenista("telefono", nombre, nuevo);
 			break;
@@ -123,7 +129,7 @@ public class ViewAlmacenistas extends MainView{
         setData();
 	}
 	
-	public void mouseClicked(MouseEvent e){
+	public void mouseReleased(MouseEvent e){
 		if(e.getSource() != this.table){
 			this.remove(delete);
 			this.add(delete_disabled);

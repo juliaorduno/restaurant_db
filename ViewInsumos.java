@@ -12,12 +12,12 @@ import javax.swing.JTextField;
 
 public class ViewInsumos extends MainView{
 	
-	protected static final int num = 3;
+	protected final int num = 3;
 	private int claveGerente;
 
 	public ViewInsumos(int claveGerente){
 		super("Insumos");
-		String[] columnNames = {"Producto","Tipo", "Proveedor" ,"Gerente"};
+		String[] columnNames = {"Producto","Tipo","Unidad","Contenido Neto", "Proveedor"};
 		this.columnNames = columnNames;
 		this.setData();
 		this.addTable(num);
@@ -40,11 +40,20 @@ public class ViewInsumos extends MainView{
 		case 0:
 			db.update_producto_nombre(table.oldValue, table.newValue);
 			break;
+		case 1:
+			db.update_producto_tipo(nombre, nuevo);
+			break;
+		case 2:
+			db.update_producto_unidad(nombre, nuevo);
+			break;
+		case 3:
+			db.update_producto_contenido(nombre, nuevo);
+			break;
 		}
         setData();
 	}
 	
-	public void mouseClicked(MouseEvent e){
+	public void mouseReleased(MouseEvent e){
 		if(e.getSource() != this.table){
 			this.remove(delete);
 			this.add(delete_disabled);
@@ -61,15 +70,15 @@ public class ViewInsumos extends MainView{
 	
 	private class Producto extends VentanaAuxiliar{
 		
-		private String nombre, tipo, proveedor, clave;
-		private JTextField tf_clave, tf_nombre, tf_tipo;
-		private JLabel l_clave, l_proveedor, l_nombre, l_tipo;
+		private String nombre, tipo, proveedor, clave, unidad, contenido;
+		private JTextField tf_clave, tf_nombre, tf_tipo, tf_contenido, tf_unidad;
+		private JLabel l_clave, l_proveedor, l_nombre, l_tipo, l_contenido, l_unidad;
 		private JTextArea header;
 		private JComboBox<String> menu_proveedores;
 		
 		public Producto(){
 			super("Nuevo Producto");
-			this.setBounds(100, 100, 382, 343);
+			this.setBounds(100, 100, 382, 400);
 			
 			this.l_clave = new JLabel("*Clave: ");
 			this.l_clave.setFont(new Font("Microsoft JhengHei UI", Font.PLAIN, 12));
@@ -91,9 +100,19 @@ public class ViewInsumos extends MainView{
 			this.header.setBounds(22, 24, 323, 37);
 			this.getContentPane().add(this.header);
 			
+			this.l_unidad = new JLabel("*Unidad: ");
+			this.l_unidad.setFont(new Font("Microsoft JhengHei UI", Font.PLAIN, 12));
+			this.l_unidad.setBounds(32, 193, 70, 26);
+			this.getContentPane().add(this.l_unidad);
+			
+			this.l_contenido = new JLabel("Contenido neto: ");
+			this.l_contenido.setFont(new Font("Microsoft JhengHei UI", Font.PLAIN, 12));
+			this.l_contenido.setBounds(32, 230, 70, 26);
+			this.getContentPane().add(this.l_contenido);
+			
 			this.l_proveedor = new JLabel("*Proveedor: ");
 			this.l_proveedor.setFont(new Font("Microsoft JhengHei UI", Font.PLAIN, 12));
-			this.l_proveedor.setBounds(32, 193, 70, 26);
+			this.l_proveedor.setBounds(32, 267, 70, 26);
 			this.getContentPane().add(this.l_proveedor);
 			
 			this.tf_clave = new JTextField();
@@ -111,12 +130,25 @@ public class ViewInsumos extends MainView{
 			this.tf_tipo.setBounds(93, 160, 252, 20);
 			this.getContentPane().add(this.tf_tipo);
 			
+			this.tf_unidad = new JTextField();
+			this.tf_unidad.setColumns(10);
+			this.tf_unidad.setBounds(93, 197, 252, 20);
+			this.getContentPane().add(this.tf_unidad);
+			
+			this.tf_contenido = new JTextField();
+			this.tf_contenido.setColumns(10);
+			this.tf_contenido.setBounds(93, 234, 252, 20);
+			this.getContentPane().add(this.tf_contenido);
+			
 			menu_proveedores = new JComboBox<String>(db.getViewGerenteInsumoItems());
 			menu_proveedores.setFont(new Font("Microsoft JhengHei UI", Font.PLAIN, 12));
 			menu_proveedores.setBackground(Color.WHITE);
-			menu_proveedores.setBounds(110, 193, 238, 20);
+			menu_proveedores.setBounds(110, 267, 238, 20);
 			menu_proveedores.setSelectedIndex(-1);
 			getContentPane().add(menu_proveedores);
+			
+			this.cancelar.setBounds(256, 320, 89, 23);
+			this.aceptar.setBounds(157, 320, 89, 23);
 			
 			this.proveedor = "";
 			
@@ -125,14 +157,17 @@ public class ViewInsumos extends MainView{
 					clave = tf_clave.getText();
 					nombre = tf_nombre.getText();
 					tipo = tf_tipo.getText();
+					unidad = tf_unidad.getText();
+					contenido = tf_contenido.getText();
 					proveedor = String.valueOf(menu_proveedores.getSelectedItem());
-					if(!clave.equals("") && !nombre.equals("") && !proveedor.equals("")){
-						db.insertarProducto(Integer.parseInt(clave), nombre, tipo, proveedor, claveGerente);
+					if(!clave.equals("") && !nombre.equals("") && !proveedor.equals("") && !unidad.equals("")){
+						db.insertarProducto(Integer.parseInt(clave), nombre, tipo, unidad, contenido, proveedor, claveGerente);
 						closeWindow();
+						setData();
 						updateTable(num);
-					} else if(clave.equals("") && nombre.equals("") && tipo.equals("") && proveedor.equals(""))
+					} else if(clave.equals("") && nombre.equals("") && tipo.equals("") && proveedor.equals("") && unidad.equals("") && contenido.equals(""))
 						closeWindow();
-					else if(clave.equals("") || nombre.equals("") || proveedor.equals(""))
+					else if(clave.equals("") || nombre.equals("") || proveedor.equals("") || unidad.equals(""))
 						JOptionPane.showMessageDialog(null, "Llenar campos obligatorios");
 					
 				}

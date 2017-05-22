@@ -10,7 +10,7 @@ import javax.swing.JTextField;
 
 public class ViewProveedores extends MainView{
 
-	protected static final int num = 4;
+	protected final int num = 4;
 	
 	public ViewProveedores(){
 		super("Proveedores");
@@ -45,7 +45,7 @@ public class ViewProveedores extends MainView{
         setData();
 	}
 	
-	public void mouseClicked(MouseEvent e){
+	public void mouseReleased(MouseEvent e){
 		if(e.getSource() != this.table){
 			this.remove(delete);
 			this.add(delete_disabled);
@@ -124,6 +124,7 @@ public class ViewProveedores extends MainView{
 					if(!clave.equals("") && !nombre.equals("")){
 						db.insertarProveedor(Integer.parseInt(clave), nombre, telefono, email);
 						closeWindow();
+						setData();
 						updateTable(num);
 					} else if(clave.equals("") && nombre.equals("") && telefono.equals("") && email.equals(""))
 						closeWindow();

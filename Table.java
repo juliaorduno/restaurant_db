@@ -15,10 +15,10 @@ public class Table extends JPanel{
 	protected String oldValue, newValue;
 	private int num;
 
-	public Table(String[] names, String[][] data, int num) {
+	public Table(String[] names, String[][] data, int n) {
 		setBackground(new Color(255, 255, 255));
 		this.setPreferredSize(new Dimension(735,450));
-		this.num = num;
+		this.num = n;
 		this.columnNames = names;
 		this.data = data;
 		DefaultTableModel model = new DefaultTableModel(this.data, this.columnNames){
@@ -32,14 +32,27 @@ public class Table extends JPanel{
 				case 1:
 					if(c==3 || c == 0)
 						return false;
+					else
+						return true;
 				case 2:
-					if(c==0 || c == 3)
+					if(c == 3)
 						return false;
+					else
+						return true;
 				case 3:
-					if(c == 1 || c==2 || c== 3)
+					if(c == 4)
 						return false;
+					else 
+						return true;
+				case 5:
+					return false;
+				case 6:
+					if(c == 0 || c == 1 || c == 3)
+						return false;
+					else
+						return true;
 				}
-		    	return true;
+				return true;
 		    }
 
 		   };
@@ -47,6 +60,8 @@ public class Table extends JPanel{
 		this.table.setBounds(0,0,730,360);
 		if(this.num == 1)
 			this.table.setPreferredScrollableViewportSize(new Dimension(700,300));
+		else if (this.num == 6)
+			this.table.setPreferredScrollableViewportSize(new Dimension(720,374));
 		else
 			this.table.setPreferredScrollableViewportSize(new Dimension(700,374));
 		this.table.setFillsViewportHeight(true);

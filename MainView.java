@@ -57,8 +57,10 @@ public class MainView extends JPanel implements MouseListener,Action{
 		});
 		if(this.title.getText().equals("Almacenes"))
 			this.table.setBounds(54, 245, 730, 338);
+		else if(this.title.getText().equals("Almacenes"))
+			this.table.setBounds(54, 181, 785, 404);
 		else
-			this.table.setBounds(54, 171, 730, 404);
+			this.table.setBounds(54, 181, 730, 404);
 		this.add(this.table);
 		TableCellListener tcl = new TableCellListener(table.table, this);
 	}

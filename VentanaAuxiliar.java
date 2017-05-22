@@ -9,7 +9,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 
 public class VentanaAuxiliar extends JFrame{
-	protected JButton cancelar, aceptar;
+	protected JButton cancelar, aceptar, borrar;
 	
 	public VentanaAuxiliar(){
 		super();
@@ -36,6 +36,12 @@ public class VentanaAuxiliar extends JFrame{
 		this.aceptar.setBackground(new Color(0, 51, 204));
 		this.aceptar.setBounds(157, 244, 89, 23);
 		this.getContentPane().add(this.aceptar);
+		this.borrar = new JButton("Eliminar");
+		this.borrar.setBounds(58,244,89,23);
+		this.borrar.setBackground(new Color(0, 51, 204));
+		this.borrar.setBorderPainted(false);
+		this.borrar.setFocusPainted(false);
+		this.borrar.setForeground(Color.WHITE);
 	}
 	
 	public VentanaAuxiliar(String title){

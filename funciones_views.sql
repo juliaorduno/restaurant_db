@@ -11,6 +11,30 @@ create or replace function update_nombre_producto(nuevo varchar, viejo varchar)
 				return dbms_utility.format_error_stack;
 	end update_nombre_producto;
 
+	create or replace function update_unidad_producto(nuevo varchar, viejo varchar)
+	return varchar is
+	begin
+		update producto
+			set unidad = nuevo 
+			where  nombre = viejo;
+		return 'OK';
+		exception
+			when others then
+				return dbms_utility.format_error_stack;
+	end update_unidad_producto;
+
+	create or replace function update_contenido_producto(nuevo varchar, viejo varchar)
+	return varchar is
+	begin
+		update producto
+			set contenido = nuevo 
+			where nombre = viejo;
+		return 'OK';
+		exception
+			when others then
+				return dbms_utility.format_error_stack;
+	end update_contenido_producto;
+
 create or replace function update_cantactual(almacen int, nproducto varchar, cantnueva int)
 	return varchar is
 	x int;
@@ -124,13 +148,13 @@ create or replace function update_almacenista_telefono(nombreAlm varchar, nuevo 
 	return varchar is
 	begin
 		update almacenista
-			set telefono = nuevo 
-			where nombre = nombreAlm;
+			set nombre = nuevo 
+			where nombre = viejo;
 		return 'OK';
 		exception
 			when others then
 				return dbms_utility.format_error_stack;
-	end update_almacenista_telefono;
+	end update_almacenista_nombre;
 
 create or replace function update_almacenista_direccion(nombreAlm varchar, nuevo varchar)
 	return varchar is
@@ -202,10 +226,10 @@ create or replace function update_almacen_nombre(num varchar, nuevo varchar)
 				return dbms_utility.format_error_stack;
 	end update_almacen_nombre;
 
-create view gerente_insumos as
-  	select p.nombre as producto, p.tipo as tipo, o.nombre as proveedor, g.nombre as gerente
-  	from producto p, proveedor o, gerente g
- 	where p.claveproveedor = o.clave and p.clavegerente = g.clave
+create or replace view gerente_insumos as
+  	select p.nombre as producto, p.tipo as tipo, p.unidad as unidad, p.contenido as contenido, o.nombre as proveedor
+  	from producto p, proveedor o
+ 	where p.claveproveedor = o.clave
 	order by p.nombre;
 
 create or replace function update_proveedor_telefono(nproveedor varchar, nuevo varchar)
@@ -244,14 +268,14 @@ create or replace function update_proveedor_nombre(nproveedor varchar, nuevo var
 				return dbms_utility.format_error_stack;
 	end update_proveedor_nombre;
 
-	create or replace function insert_producto(claveP int, nproducto varchar, tip varchar, prov varchar, ger int)
+	create or replace function insert_producto(claveP int, nproducto varchar, tip varchar, un varchar, cont varchar, prov varchar, ger int)
 	return varchar is
 	x int;
 	begin
 		select clave into x from 
 			proveedor
 			where nombre = prov;
-		insert into producto values(claveP, nproducto, tip, x, ger);
+		insert into producto values(claveP, nproducto, tip, x, ger, un, cont);
 		return 'OK';
 		exception
 			when others then
@@ -267,3 +291,45 @@ create or replace function insert_proveedor(claveP int, nombreP varchar, tel var
 			when others then
 				return dbms_utility.format_error_stack;
 	end insert_proveedor;
+
+create or replace trigger movement
+		after update or insert of cantactual on insumo
+		for each row
+	declare
+		 user int;
+		 alm int;
+		 prod int;
+		 diff int;
+		 fech date;
+	begin
+		 alm := :new.nalmacen;
+		 prod := :new.clave;
+		 select sysdate into fech FROM DUAL;
+		 diff := :new.cantactual - :old.cantactual;
+		 select clave into user from usuario u
+		 where u.almacen = alm;
+		 insert into movimientos values(user, alm, prod, diff, fech);
+		 exception
+			 when others then
+			 	if SQLCODE = -1400 THEN
+			 		insert into movimientos values(user, alm, prod, :new.cantactual, fech);
+			 	else
+					dbms_output.put_line(dbms_utility.format_error_stack);	
+				end if;	 	
+	end;
+
+create or replace view gerente_almacenes as
+   select nalmacen, nombre, cantnecesaria, cantactual, 'Urgente' as estado
+   from insumo natural join producto
+   where cantactual <= cantnecesaria*0.1
+   union
+    select nalmacen, nombre, cantnecesaria, cantactual, 'Bajo' as estado
+    from insumo natural join producto
+    where cantactual > cantnecesaria*0.1 and cantactual <= cantnecesaria*0.5
+    union
+   select nalmacen, nombre, cantnecesaria, cantactual, 'Suficiente' as estado
+   from insumo natural join producto
+   where cantactual > cantnecesaria*0.5
+   order by nombre asc;
+
+
